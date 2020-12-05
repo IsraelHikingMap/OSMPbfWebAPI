@@ -91,6 +91,23 @@ namespace OSMPbfWebAPI.Controllers
         }
 
         /// <summary>
+        /// Get an osm pbf file
+        /// </summary>
+        /// <param name="id">The ID of the container</param>
+        /// <returns>An OSM pbf file updated according to latest run of update method</returns>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(string id)
+        {
+            if (!_fileProvider.GetDirectoryContents(id).Any())
+            {
+                return BadRequest("There's a need to run POST create method before getting a file");
+            }
+            var config = await GetConfiguration(id);
+            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(id, config.FileName));
+            return File(fileInfo.CreateReadStream(), "application/pbf", config.FileName);
+        }
+
+        /// <summary>
         /// Use this method to create an OSM container 
         /// </summary>
         /// <param name="request">Example:
