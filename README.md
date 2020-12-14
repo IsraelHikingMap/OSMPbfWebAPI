@@ -6,5 +6,5 @@ The main functionality is by creating a container that hold an OSM pbf file.
 Update it by downloading daily and or minutely updates and stream it back.
 
 In order to build this you'll need to docker.
-Run `docker build -t docker build -t osmctools-webapi .` to build.
+Run `docker build -t osmctools-webapi .` to build.
 When build is complete run `docker run -p 11911:80 osmctools-webapi` and surf to `localhost:11911/swagger`
