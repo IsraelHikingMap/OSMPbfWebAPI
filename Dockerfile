@@ -9,4 +9,5 @@ WORKDIR /app
 RUN apt-get update -y && apt-get install -y osmctools
 COPY --from=build-env /app/out .
 EXPOSE 80
+VOLUME ["/app/containers"]
 ENTRYPOINT ["dotnet", "OSMPbfWebAPI.dll"]

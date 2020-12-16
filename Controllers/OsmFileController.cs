@@ -50,9 +50,10 @@ namespace OSMPbfWebAPI.Controllers
     /// A controller to wrap OSM-C-Tools functionality
     /// </summary>
     [ApiController]
-    [Route("[controller]")]
+    [Route("")]
     public class OsmFileController : ControllerBase
     {
+        private const string BASE_CONTAINERS_FOLDER = "containers";
         private const string OSM_UPDATE_PROCESS_NAME = "osmupdate";
         private const string OSM_CONVERT_PROCESS_NAME = "osmconvert";
         private const string JSON_CONFIG_FILE = "config.json";
@@ -86,7 +87,7 @@ namespace OSMPbfWebAPI.Controllers
         [HttpGet]
         public string[] Get()
         {
-            var directoryContent = _fileProvider.GetDirectoryContents("");
+            var directoryContent = _fileProvider.GetDirectoryContents(BASE_CONTAINERS_FOLDER);
             return directoryContent.Where(f => f.IsDirectory).Select(f => f.Name).ToArray();
         }
 
@@ -98,12 +99,12 @@ namespace OSMPbfWebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            if (!_fileProvider.GetDirectoryContents(id).Any())
+            if (!_fileProvider.GetDirectoryContents(Path.Combine(BASE_CONTAINERS_FOLDER, id)).Any())
             {
                 return BadRequest("There's a need to run POST create method before getting a file");
             }
             var config = await GetConfiguration(id);
-            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(id, config.FileName));
+            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(BASE_CONTAINERS_FOLDER, id, config.FileName));
             return File(fileInfo.CreateReadStream(), "application/pbf", config.FileName);
         }
 
@@ -130,7 +131,7 @@ namespace OSMPbfWebAPI.Controllers
             }
             
             var directoryFullPath = GetFullPathFromId(request.Id);
-            if (_fileProvider.GetDirectoryContents(request.Id).Any())
+            if (_fileProvider.GetDirectoryContents(Path.Combine(BASE_CONTAINERS_FOLDER, request.Id)).Any())
             {
                 _logger.LogInformation($"Directory already exists for id: {request.Id}, nothing to do");
                 return request.Id;
@@ -156,7 +157,7 @@ namespace OSMPbfWebAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, [FromBody]UpdateRequest request)
         {
-            if (!_fileProvider.GetDirectoryContents(id).Any())
+            if (!_fileProvider.GetDirectoryContents(Path.Combine(BASE_CONTAINERS_FOLDER, id)).Any())
             {
                 return BadRequest("There's a need to run POST create method before running this update");
             }
@@ -219,16 +220,16 @@ namespace OSMPbfWebAPI.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPost("{id}/updates")]
+        [HttpPut("{id}/updates")]
         public async Task<IActionResult> GetUpdates(string id)
         {
-            if (!_fileProvider.GetDirectoryContents(id).Any())
+            if (!_fileProvider.GetDirectoryContents(Path.Combine(BASE_CONTAINERS_FOLDER, id)).Any())
             {
                 return BadRequest("There's a need to run POST create method before running this update");
             }
             var config = await GetConfiguration(id);
             await UpdateFileToLatestVersion(id);
-            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(id, config.UpdateFileName));
+            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(BASE_CONTAINERS_FOLDER, id, config.UpdateFileName));
             return File(fileInfo.CreateReadStream(), "application/xml");
         }
 
@@ -240,7 +241,7 @@ namespace OSMPbfWebAPI.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            if (!_fileProvider.GetDirectoryContents(id).Any())
+            if (!_fileProvider.GetDirectoryContents(Path.Combine(BASE_CONTAINERS_FOLDER, id)).Any())
             {
                 return BadRequest("There's a need to run POST create method before running delete");
             }
@@ -305,14 +306,14 @@ namespace OSMPbfWebAPI.Controllers
 
         private async Task<CreateRequest> GetConfiguration(string id)
         {
-            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(id, JSON_CONFIG_FILE));
+            var fileInfo = _fileProvider.GetFileInfo(Path.Combine(BASE_CONTAINERS_FOLDER, id, JSON_CONFIG_FILE));
             var stream = fileInfo.CreateReadStream();
             return await JsonSerializer.DeserializeAsync<CreateRequest>(stream);
         }
 
         private string GetFullPathFromId(string id)
         {
-            return Path.Combine(_webHostEnvironment.ContentRootPath, id);
+            return Path.Combine(_webHostEnvironment.ContentRootPath, BASE_CONTAINERS_FOLDER, id);
         }
     }
 }
