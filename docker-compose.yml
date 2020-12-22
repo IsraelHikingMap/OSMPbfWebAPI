@@ -1,0 +1,7 @@
+version: '3.4'
+services:
+  osmpbfwebapi:
+    build: .
+    ports:
+      - 8987:80
+    restart: always
