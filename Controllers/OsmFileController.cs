@@ -81,9 +81,9 @@ namespace OSMPbfWebAPI.Controllers
         }
 
         /// <summary>
-        /// Gets all the curently available OSM containers
+        /// Gets all the curently available OSM extracts
         /// </summary>
-        /// <returns>A list of container IDs</returns>
+        /// <returns>A list of extract IDs</returns>
         [HttpGet]
         public string[] Get()
         {
@@ -94,7 +94,7 @@ namespace OSMPbfWebAPI.Controllers
         /// <summary>
         /// Get an osm pbf file
         /// </summary>
-        /// <param name="id">The ID of the container</param>
+        /// <param name="id">The ID of the extract</param>
         /// <returns>An OSM pbf file updated according to latest run of update method</returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
@@ -109,7 +109,7 @@ namespace OSMPbfWebAPI.Controllers
         }
 
         /// <summary>
-        /// Use this method to create an OSM container 
+        /// Use this method to create an OSM extract 
         /// </summary>
         /// <param name="request">Example:
         /// { <br/>
@@ -121,7 +121,7 @@ namespace OSMPbfWebAPI.Controllers
         ///     "baseUpdateAddress": "http://download.openstreetmap.fr/replication/asia/israel_and_palestine", <br/>
         ///     "updateMode": "Minute" <br/>
         /// }</param>
-        /// <returns>The newly created container ID</returns>
+        /// <returns>The newly created extract ID</returns>
         [HttpPost]
         public async Task<string>CreateFolder(CreateRequest request)
         {
@@ -149,9 +149,9 @@ namespace OSMPbfWebAPI.Controllers
 
 
         /// <summary>
-        /// Update and osm container by downloading a daily file and/or updating it
+        /// Update an osm extract by downloading a daily file and/or updating it
         /// </summary>
-        /// <param name="id">The container ID</param>
+        /// <param name="id">The extract ID</param>
         /// <param name="request">The parameters to use for the update</param>
         /// <returns></returns>
         [HttpPut("{id}")]
@@ -210,13 +210,13 @@ namespace OSMPbfWebAPI.Controllers
             {
                 modeFlags += "--day ";
             }
-            RunProcess(OSM_UPDATE_PROCESS_NAME, $"{config.FileName} {config.UpdateFileName} --base-url={config.BaseUpdateAddress} {modeFlags.Trim()}", GetFullPathFromId(id), 60*60*1000);
+            RunProcess(OSM_UPDATE_PROCESS_NAME, $"{config.FileName} {config.UpdateFileName} --base-url={config.BaseUpdateAddress} {modeFlags.Trim()} --verbose", GetFullPathFromId(id), 60*60*1000);
             RunOsmConvert($"{config.FileName} {config.UpdateFileName}", GetFullPathFromId(id), config.FileName);
             _logger.LogInformation("Finished updating to latest OSM file.");
         }
 
         /// <summary>
-        /// Update a container with the given ID and returns the OSM change file content
+        /// Update an extract with the given ID and returns the OSM change file content
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -234,9 +234,9 @@ namespace OSMPbfWebAPI.Controllers
         }
 
         /// <summary>
-        /// Deletes a container 
+        /// Deletes an extract 
         /// </summary>
-        /// <param name="id">The container ID</param>
+        /// <param name="id">The extract ID</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
