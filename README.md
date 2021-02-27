@@ -11,8 +11,8 @@ In order to use this you'll need docker.
 Run  `docker-compose up -d`
 
 ## Running with `docker`
-Build the container with `docker build -t osmpbf-webapi .`
-When build is complete run `docker run -p 8987:80 osmpbf-webapi`
+Build the container with `docker build . -t osmpbfwebapi`
+When build is complete run `docker run -p 8987:80 osmpbfwebapi`
 
 ## Checking the API
 Open [`http://localhost:8987/swagger`](http://localhost:8987/swagger) to get a simple UI to interact with the pbf extracts mamanger/

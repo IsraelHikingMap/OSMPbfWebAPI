@@ -19,7 +19,6 @@ namespace OSMPbfWebAPI.Controllers
     /// OSM update mode
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    [Flags]
     public enum UpdateMode
     {
         None = 0,
@@ -54,7 +53,7 @@ namespace OSMPbfWebAPI.Controllers
     public class OsmFileController : ControllerBase
     {
         private const string BASE_CONTAINERS_FOLDER = "containers";
-        private const string OSM_UPDATE_PROCESS_NAME = "osmupdate";
+        private const string OSM_UPDATE_PROCESS_NAME = "pyosmium-up-to-date";
         private const string OSM_CONVERT_PROCESS_NAME = "osmconvert";
         private const string JSON_CONFIG_FILE = "config.json";
 
@@ -197,21 +196,18 @@ namespace OSMPbfWebAPI.Controllers
         {
             _logger.LogInformation("Starting updating to latest OSM file.");
             var config = await GetConfiguration(id);
-            var modeFlags = string.Empty;
-            if (config.UpdateMode.HasFlag(UpdateMode.Minute))
+            var modeFlags = config.UpdateMode switch
             {
-                modeFlags += "--minute ";
-            }
-            if (config.UpdateMode.HasFlag(UpdateMode.Hour))
+                UpdateMode.Day => "day",
+                UpdateMode.Hour => "hour",
+                UpdateMode.Minute => "minute",
+                _ => throw new InvalidDataException(nameof(config.UpdateMode))
+            };
+
+            if (!RunProcess(OSM_UPDATE_PROCESS_NAME, $"--server \"{config.BaseUpdateAddress}/{modeFlags.Trim().ToLower()}/\" {config.FileName}", GetFullPathFromId(id), 60*60*1000))
             {
-                modeFlags += "--hour ";
+                throw new Exception("Failed to update to latest OSM file.");
             }
-            if (config.UpdateMode.HasFlag(UpdateMode.Day))
-            {
-                modeFlags += "--day ";
-            }
-            RunProcess(OSM_UPDATE_PROCESS_NAME, $"{config.FileName} {config.UpdateFileName} --base-url={config.BaseUpdateAddress} {modeFlags.Trim()} --verbose", GetFullPathFromId(id), 60*60*1000);
-            RunOsmConvert($"{config.FileName} {config.UpdateFileName}", GetFullPathFromId(id), config.FileName);
             _logger.LogInformation("Finished updating to latest OSM file.");
         }
 
@@ -277,7 +273,7 @@ namespace OSMPbfWebAPI.Controllers
             return (fileName, content);
         }
 
-        private void RunProcess(string fileName, string arguments, string workingDirectory, int timeOutInMilliseconds)
+        private bool RunProcess(string fileName, string arguments, string workingDirectory, int timeOutInMilliseconds)
         {
             _logger.LogInformation($"Starting process: {fileName} {arguments} at {workingDirectory}");
             using var process = new Process
@@ -294,14 +290,13 @@ namespace OSMPbfWebAPI.Controllers
             };
             process.Start();
             process.WaitForExit(timeOutInMilliseconds);
-            if (process.ExitCode == 0)
-            {
-                _logger.LogInformation($"Finished process {fileName} {arguments} successfully");
-            }
-            else
+            if (process.ExitCode != 0)
             {
                 _logger.LogError($"Finished process {fileName} {arguments} without sucsess {process.ExitCode}");
+                return false;
             }
+            _logger.LogInformation($"Finished process {fileName} {arguments} successfully");
+            return true;
         }
 
         private async Task<CreateRequest> GetConfiguration(string id)
