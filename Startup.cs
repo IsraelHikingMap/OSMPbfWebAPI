@@ -11,12 +11,12 @@ using Microsoft.OpenApi.Models;
 namespace OSMPbfWebAPI
 {
     /// <summary>
-    /// ASP Net standard starup file
+    /// ASP Net standard startup file
     /// </summary>
     public class Startup
     {
         /// <summary>
-        /// Class constrcutor
+        /// Class constructor
         /// </summary>
         /// <param name="configuration"></param>
         public Startup(IConfiguration configuration)
@@ -36,6 +36,7 @@ namespace OSMPbfWebAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHttpClient();
+            services.AddHealthChecks();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -63,6 +64,7 @@ namespace OSMPbfWebAPI
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHealthChecks("api/health");
                 endpoints.MapControllers();
             });
         }
