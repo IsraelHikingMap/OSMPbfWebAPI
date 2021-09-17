@@ -35,6 +35,7 @@ namespace OSMPbfWebAPI
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks();
             services.AddHttpClient();
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -63,6 +64,7 @@ namespace OSMPbfWebAPI
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHealthChecks("api/health");
                 endpoints.MapControllers();
             });
         }
