@@ -1,3 +1,6 @@
+# Depracated!
+We've moved to use nginx to facilitate for getting the file using http and use a shell script to update it locally on the server's machine.
+
 # OSMPbfWebAPI
 An OSM Pbf manager exposed as HTTP REST API
 
